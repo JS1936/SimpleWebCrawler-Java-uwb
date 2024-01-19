@@ -14,7 +14,7 @@ import java.util.Vector;
 
 public class WebCrawler {
 
-    static Vector<String> visitedURLs;    // to track urls that have been visited. Avoid repeat visits.
+    static Vector<String> visitedURLs = new Vector<String>();    // to track urls that have been visited. Avoid repeat visits.
 
     // Command line input,
     //      expect: 2 args, args[0] = starting url, args[1] = integer >= 0 (num_hops)
@@ -27,21 +27,21 @@ public class WebCrawler {
             System.out.println("ARG = " + arg);
         }
     }
-    public static void hop(String[] args)
+    public static void printVisitedURLs()
+    {
+        System.out.println("----Visited URLs:-----");
+        for(String url : visitedURLs)
+        {
+            System.out.println(url);
+        }
+    }
+    /*public static void hop(String[] args)
     {
         System.out.println("args.length = " + args.length);
         printArgs(args);
 
-    }
-    public static void main(String[] args) throws IOException {
-        System.out.println("Welcome to WebCrawler.java");
-        System.out.println("--------------------------");
-        hop(args);
-
-
-
-
-
+    }*/
+    public static void main2(String[] args) throws IOException {
         // 1. Check number of arguments
         if(args.length != 2)
         {
@@ -62,6 +62,22 @@ public class WebCrawler {
         }
         //System.out.println("Attempting to connect to : " + url.toString());
         connect(url);
+    }
+    // 1. Validate args
+    // 2. Connect
+    // 3. If connect, then get next link
+    //          1. Validate args...
+    public static void main(String[] args) throws IOException {
+        System.out.println("Welcome to WebCrawler.java");
+        System.out.println("--------------------------");
+        //hop(args);
+        System.out.println("args.length = " + args.length);
+        printArgs(args);
+
+        main2(args);
+
+
+
 
     }
     //Given a URL, checks the current response code for the HttpURLConnection connection.
@@ -103,13 +119,97 @@ public class WebCrawler {
         return connection;
     }
 
+    //storage, / option...
+    //NOTE: make it so http://blah and https://blah register as same thing
+    //NOTE: make it so BLAH/ and BLAH register as same thing
+
+    // if length is different by 1
+    //      - is one http<?> and other https?
+    //      - is one BLAH and other BLAH/?
+//why is printVisitedURLs getting called twice as often?
+    public static boolean alreadyVisited(String urlFound)
+    {
+        System.out.println("-----Checking if url is already visited: " + urlFound);
+        //printVisitedURLs();
+        if(visitedURLs.size() == 0)
+        {
+            System.out.println("New url found! --> " + urlFound);
+            addToVisited(urlFound);
+            return false;
+        }
+        for(String url: visitedURLs)
+        {
+            System.out.println(url + " VS \n" + urlFound);
+            int difference = url.length() - urlFound.length();
+            if(difference > 2) //EX: could need 's' and '/'
+            {
+                return false;
+            }
+
+            String urlFoundAddSlash = urlFound + "/";
+            String urlFoundRemoveLast = urlFound.substring(0, urlFound.length() - 1);
+            String urlFoundAddS = urlFound.substring(0,4) + "s" + urlFound.substring(4, urlFound.length());
+            String urlFoundRemoveS = urlFound.substring(0,4) + urlFound.substring(5, urlFound.length());
+            System.out.println("urlFoundAddSlash   = " + urlFoundAddSlash);
+            System.out.println("urlFoundRemoveLast = " + urlFoundRemoveLast);
+            System.out.println("urlFoundAddS       = " + urlFoundAddS);
+            System.out.println("urlFoundRemoveS    = " + urlFoundRemoveS);
+            if(url.equals(urlFound))
+            {
+                System.out.println("url == urlFound");
+                return true;
+            }
+            else if(url.equals(urlFoundAddSlash))
+            {
+                System.out.println("url == urlFoundAddSlash");
+                return true;
+            }
+            else if(url.equals(urlFoundRemoveLast))
+            {
+                System.out.println("url == urlFoundRemoveLast");
+                return true;
+            }
+            else if(url.equals(urlFoundAddS))
+            {
+                System.out.println("url == urlFoundAddS");
+                return true;
+            }
+            else if(url.equals(urlFoundRemoveS)) //Note: may not actually have https. Could become http//, removed :. Invalid link now.
+            {
+                System.out.println("url == urlFoundRemoveS");
+                return true;
+            }
+            else //not a match for this one
+            {
+
+            }
+        }
+        // Not already visited
+        System.out.println("New url found! --> " + urlFound);
+        addToVisited(urlFound);
+        //printVisitedURLs();
+        return false;
+
+    }
     //to-do: check that this actually works
     // Note: does url count as visited as soon as you find it? Or do you need to connect with it first? OR connect + check all links first?
     public static boolean addToVisited(String urlFound)
     {
+        int lengthFound = urlFound.length();
+
         for(int i = 0; i < visitedURLs.size(); i++)
         {
-            if(urlFound == visitedURLs.get(i))
+            String urlCurr = visitedURLs.get(i);
+            int lengthCurrVisited = urlCurr.length();
+            if((lengthFound - lengthCurrVisited) == 1)
+            {
+                urlFound.substring(0, lengthFound - 1); //take of "/", if exists
+            }
+            else if((lengthFound - lengthCurrVisited) == -1)
+            {
+                urlFound += "/"; // add "/", just in case
+            }
+            if(urlFound == urlCurr) //visitedURLs.get(i)
             {
                 System.out.println(urlFound + " already was visited. Do not add to visitedURLs");
                 return false;
@@ -129,13 +229,13 @@ public class WebCrawler {
         {
             result += (char)(is.read());
         }
-        System.out.println("result = \n" + result); //gives html
+        //System.out.println("result = \n" + result); //gives html
 
         //now parse it...
         int index = 0;
         int count = 0;
-        //while(result.length() > 0 && index != -1)
-       // {
+        while(result.length() > 0 && index != -1)
+        {
             index = result.indexOf("<a href=\"http");
             System.out.print(count + ": index for '<a href=\"http' ==> " + index);
             if(index != -1)
@@ -146,13 +246,17 @@ public class WebCrawler {
                 int hrefEndIndex = result.indexOf("\">");
                 // length of 'a href="' = 8
 
-                String content = result.substring(8, hrefEndIndex + 1);
+                String content = result.substring(8, hrefEndIndex);
                 System.out.println( " | content: " + content);
-                connect(getURL(content));
+                if(!alreadyVisited(content))
+                {
+                    connect(getURL(content));
+                }
+                printVisitedURLs();
             }
             // <a href="http://faculty.washington.edu/dimpsey">
             //result = result.substring(index + 1); // new start index
-        //}
+        }
 
     }
     /*
@@ -175,6 +279,30 @@ public class WebCrawler {
 
 
         return null;
+    }
+
+    // If valid, expect: args[0] = url, args[1] = int >= 0
+    private static boolean isValidArgs(String[] args)
+    {
+        // 1. Check number of arguments
+        if(args.length != 2)
+        {
+            System.err.println("Error: Expect 2 args (url, num_hops). Actual: " + args.length);
+            return false;
+        }
+        System.out.println("\t# arguments:\tOK");
+
+        //2. Check url and num_hops
+        URL url = getURL(args[0]);
+        Integer num_hops = getNumHops(args[1]);
+        Integer argc = args.length;
+
+        // Only continue if input is valid.
+        if(!isValidInput(url, num_hops))
+        {
+            return false;
+        }
+        return true;
     }
     private static URL getURL(String str)
     {
