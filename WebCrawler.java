@@ -13,8 +13,9 @@ import java.util.Vector;
 public class WebCrawler {
 
     static Vector<String> visitedURLs = new Vector<String>();    // to track urls that have been visited. Avoid repeat visits.
-    static int currHop = 0;
+    static int currHop = 0; //start at 1 or 0?
     static int numHops = 0; //default
+    //add static int currURL = 0?
 
     // Command line input,
     //      expect: 2 args, args[0] = starting url, args[1] = integer >= 0 (num_hops)
@@ -96,32 +97,48 @@ public class WebCrawler {
         {
             //System.out.println("connection = " + connection.toString());
             connection.setRequestMethod("GET");
+            //connection.setInstanceFollowRedirects(true); //try this
 
             int responseCode = connection.getResponseCode();
-            //System.out.println("ResponseCode = " + responseCode);
+            System.out.println("ResponseCode = " + responseCode);
             if(responseCode == 200)
             {
-                ///System.out.println("Connection made. URL = " + url.toString() + "\n");
+                System.out.println("\nConnection made. URL = " + url.toString());
+                addToVisited(url.toString());
             }
             else
             {
-                System.out.println("Connection error: invalid response (responseCode = " + responseCode + ")\n");
+                System.out.println("Connection error | responseCode " + responseCode + " | " + url.toString());
 
                 //404: not found
 
-                //301: redirect
-                return null;
+                if(responseCode == 301) //301: redirect
+                {
+                    String newLocation = connection.getHeaderField("Location");
+                    System.out.println("--> new location = " + newLocation);
+                    URL newURL = getURL(newLocation);
+                    connect(newURL);
+                }
+                //else {
+                    return null;
+                //}
             }
-            InputStream is = connection.getInputStream();
+            InputStream is = connection.getInputStream(); //LOOK HERE
+            //connection.getInstanceFollowRedirects()
+
             //System.out.println("hop 0 = " + url.toString());
             parse(is);
-
-
-
-
         }
         return connection;
     }
+    //return null; //?
+    //String result = "";
+//                    while(is.available() > 0)
+//                    {
+//                        result += (char)(is.read());
+//                    }
+//                    System.out.println("error result = \n" + result); //gives html
+
 
     //storage, / option...
     //NOTE: make it so http://blah and https://blah register as same thing
@@ -135,10 +152,8 @@ public class WebCrawler {
     {
         ///System.out.println("-----Checking if url is already visited: " + urlFound);
         //printVisitedURLs();
-        if(visitedURLs.size() == 0)
+        if(visitedURLs.size() == 0) // urlFound is automatically unvisited
         {
-            System.out.println("(" + currHop + ") New url found! --> " + urlFound);
-            addToVisited(urlFound);
             return false;
         }
         for(String url: visitedURLs)
@@ -152,12 +167,6 @@ public class WebCrawler {
 
             String urlFoundAddSlash = urlFound + "/";
             String urlFoundRemoveLast = urlFound.substring(0, urlFound.length() - 1);
-            //String urlFoundAddS = urlFound.substring(0,4) + "s" + urlFound.substring(4, urlFound.length());
-            //String urlFoundRemoveS = urlFound.substring(0,4) + urlFound.substring(5, urlFound.length());
-            //System.out.println("urlFoundAddSlash   = " + urlFoundAddSlash);
-            //System.out.println("urlFoundRemoveLast = " + urlFoundRemoveLast);
-            //System.out.println("urlFoundAddS       = " + urlFoundAddS);
-            //System.out.println("urlFoundRemoveS    = " + urlFoundRemoveS);
             if(url.equals(urlFound))
             {
                 ///System.out.println("url == urlFound");
@@ -173,24 +182,14 @@ public class WebCrawler {
                 ///System.out.println("url == urlFoundRemoveLast");
                 return true;
             }
-            //else if(url.equals(urlFoundAddS))
-            //{
-            //    System.out.println("url == urlFoundAddS");
-            //    return true;
-            //}
-            //else if(url.equals(urlFoundRemoveS)) //Note: may not actually have https. Could become http//, removed :. Invalid link now.
-            //{
-            //    System.out.println("url == urlFoundRemoveS");
-            //    return true;
-            //}
             else //not a match for this one
             {
 
             }
         }
         // Not already visited
-        System.out.println("(" + currHop + ") New url found! --> " + urlFound);
-        addToVisited(urlFound);
+        //System.out.println("(" + currHop + ") New url found! --> " + urlFound);
+        //addToVisited(urlFound);
         //printVisitedURLs();
         return false;
 
@@ -203,6 +202,7 @@ public class WebCrawler {
     public static void addToVisited(String urlFound)
     {
         //System.out.print("visitedURLs.size() = " + visitedURLs.size() + " -->");
+        System.out.println("(" + currHop + ") " + urlFound);
         visitedURLs.add(urlFound);
         currHop++;
         //System.out.println(visitedURLs.size());
@@ -210,7 +210,7 @@ public class WebCrawler {
     }
     private static void parse(InputStream is) throws IOException {
         //System.out.println("is = " + is.toString());
-        //System.out.println("is.available() = " + is.available());
+        System.out.println("is.available() = " + is.available());
         String result = "";
         while(is.available() > 0)
         {
@@ -248,7 +248,7 @@ public class WebCrawler {
                 {
                     content = result.substring(0, hrefEndIndex);
                 }
-                ///System.out.println( " | content: " + content);
+                System.out.println( " | content: " + content);
                 if(content.length() > 0 && !alreadyVisited(content))
                 {
                     connect(getURL(content));
