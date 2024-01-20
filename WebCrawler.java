@@ -85,20 +85,17 @@ public class WebCrawler {
         }
         else //connection is not null
         {
-            System.out.println("connection = " + connection.toString());
+            //System.out.println("connection = " + connection.toString());
             connection.setRequestMethod("GET");
-            //connection.setInstanceFollowRedirects(true); //try this
 
             int responseCode = connection.getResponseCode();
             //System.out.println("ResponseCode = " + responseCode);
             if(responseCode == 200)
             {
-                System.out.println("\nConnection made. URL = " + url.toString());
+                //System.out.println("\nConnection made. URL = " + url.toString());
                 addToVisited(url.toString());
                 InputStream is = connection.getInputStream(); //LOOK HERE
-                System.out.println("is = " + is.toString());
-                //connection.getInstanceFollowRedirects()
-                //System.out.println("hop 0 = " + url.toString());
+                //System.out.println("is = " + is.toString());
                 parse(is);
                 //is.close();
             }
@@ -115,40 +112,16 @@ public class WebCrawler {
                     URL newURL = getURL(newLocation);
                     connect(newURL);
                 }
-                //else {
-                    return null;
-                //}
+                return null;
             }
-//            InputStream is = connection.getInputStream(); //LOOK HERE
-//            System.out.println("is = " + is.toString());
-//            //connection.getInstanceFollowRedirects()
-//            //System.out.println("hop 0 = " + url.toString());
-//            parse(is);
-//            //is.close();
         }
         return connection;
     }
-    //return null; //?
-    //String result = "";
-//                    while(is.available() > 0)
-//                    {
-//                        result += (char)(is.read());
-//                    }
-//                    System.out.println("error result = \n" + result); //gives html
 
-
-    //storage, / option...
-    //NOTE: make it so http://blah and https://blah register as same thing
-    //NOTE: make it so BLAH/ and BLAH register as same thing
-
-    // if length is different by 1
-    //      - is one http<?> and other https?
-    //      - is one BLAH and other BLAH/?
-//why is printVisitedURLs getting called twice as often?
+    // Returns true if urlFound has been already visited. Otherwise, returns false.
+    // Note: <url> and <url>/ are considered to be the same.
     public static boolean alreadyVisited(String urlFound)
     {
-        ///System.out.println("-----Checking if url is already visited: " + urlFound);
-        //printVisitedURLs();
         if(visitedURLs.size() == 0) // urlFound is automatically unvisited
         {
             return false;
@@ -176,35 +149,26 @@ public class WebCrawler {
         System.out.println("(" + currHop + ") " + urlFound);
         visitedURLs.add(urlFound);
         currHop++;
-
     }
 
     //check if specifying whole path or not (todo)
+    //what if there are no new links to be found? (todo)
+    //is the number off hops off by one (doing one extra)? (todo)
     private static void parse(InputStream is) throws IOException {
-        //System.out.println("is = " + is.toString());
-        System.out.println("is.available() = " + is.available());
+
         String result = "";
-        //while(is.available() > 0)
-        //{
-        //    result += (char)(is.read());
-        //}
         while(true)
         {
             int var = is.read();
-            //System.out.println("var = " + var);
-            if(var == -1)
-            {
-                break;
-            }
+            if(var == -1) { break; }
             result += (char)(var);
         }
-        //System.out.println("result = " + result);
-        ///System.out.println("result = \n" + result); //gives html
+        //System.out.println("result = " + result); // gives html
 
         //Try writing it to file
-        //BufferedWriter bw = new BufferedWriter(new FileWriter("output.txt"));
-        //bw.write(result);
-        //bw.close();
+        BufferedWriter bw = new BufferedWriter(new FileWriter("output" + currHop + ".txt"));
+        bw.write(result);
+        bw.close();
 
         //now parse it...
         int index = 0;
@@ -212,20 +176,12 @@ public class WebCrawler {
         while(result.length() > 0 && index != -1 && currHop < numHops)
         {
             index = result.indexOf("<a href=\"http");
-            //System.out.print(count + ": index for '<a href=\"http' ==> " + index);
-            ///System.out.print("Hop " + count + ": " + index);
             if(index != -1)
             {
                 count++;
                 result = result.substring(index + 9); // new start index
 
                 int hrefEndIndex = result.indexOf("\"");//result.indexOf("\">"); //Look hERE
-                //if(index == -1)
-                //{
-                //    System.
-                //}
-                // length of 'a href="' = 8
-
                 String content = "";
                 if(hrefEndIndex > 0)
                 {
@@ -236,54 +192,10 @@ public class WebCrawler {
                 {
                     connect(getURL(content));
                 }
-                //printVisitedURLs();
             }
-            // <a href="http://faculty.washington.edu/dimpsey">
-            //result = result.substring(index + 1); // new start index
-        }
-
-    }
-    /*
-    //Given a URL, checks the current response code for the HttpURLConnection connection.
-    //Expect: response code is 200 (valid/OK). Otherwise, invalid connection.
-    private void printResponseCodeSuccessFail(URL url) throws IOException {
-        System.out.println("Response code: " + this.connection.getResponseCode()); //expect: 200
-        if(this.connection.getResponseCode() == 200) //response is valid/OK
-        {
-            System.out.println("Connection made. URL: " + url.toString());
-        }
-        else
-        {
-            System.out.println("Error: connection to api has invalid response");
         }
     }
-     */
 
-    // If valid, expect: args[0] = url, args[1] = int >= 0
-    /*
-    private static boolean isValidArgs(String[] args)
-    {
-        // 1. Check number of arguments
-        if(args.length != 2)
-        {
-            System.err.println("Error: Expect 2 args (url, num_hops). Actual: " + args.length);
-            return false;
-        }
-        System.out.println("\t# arguments:\tOK");
-
-        //2. Check url and num_hops
-        URL url = getURL(args[0]);
-        Integer num_hops = getNumHops(args[1]);
-        Integer argc = args.length;
-
-        // Only continue if input is valid.
-        if(!isValidInput(url, num_hops))
-        {
-            return false;
-        }
-        return true;
-    }
-     */
     private static URL getURL(String str)
     {
         URL url;
@@ -335,7 +247,3 @@ public class WebCrawler {
     }
 
 }
-
-// while num_hops > 0
-//      do hop, print
-//      hop--
