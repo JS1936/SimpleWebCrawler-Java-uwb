@@ -9,7 +9,7 @@ import java.util.Vector;
  * - Requires a starting url and a limit on number of url hops.
  * - Follows a depth-first search pattern for urls.
  * - Search concludes when: (1) limit on number of hops is met OR
- *                          (2) a link has no new accessible options
+ *                          (2) a link has no new accessible references
  *
  * Project 1: Web Crawler
  * CSS 436  : Cloud Computing
@@ -72,10 +72,12 @@ public class WebCrawl {
         System.out.println("--------------------------");
         start(args);        // start web crawl from given url (hop 0)
         printVisitedURLs(); // only prints if currHop reaches numHops
+        System.out.println("Hop limit (" + numHops + ") reached. Web crawl completes."); // currHop reached hop limit
     }
 
     // Returns connection.
     // Special case example: 301 (redirect)
+    // For non-200 response messages (except 301), does not continue with proposed url. Example: 404.
     private static HttpURLConnection connect(URL url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -101,10 +103,10 @@ public class WebCrawl {
             }
             else
             {
+                //Example ==> 404: not found
                 System.out.println("Connection error | responseCode " + responseCode + " | " + url.toString());
 
-                //404: not found
-
+                // Special case: redirect
                 if(responseCode == 301) //301: redirect
                 {
                     String newLocation = connection.getHeaderField("Location");
@@ -155,6 +157,7 @@ public class WebCrawl {
     // Parses by <a href>, looking for urls coming after.
     //
     // Optional: write to file to store results to review when debugging.
+    // Expects: whole path specified, not partial
     private static void parse(InputStream is) throws IOException {
 
         String result = "";
@@ -171,16 +174,14 @@ public class WebCrawl {
         bw.write(result);
         bw.close();
 
-        // In result, search for all urls preceded by '<a href=http'.
-        int index = 0;
-        int count = 0;
-        while(result.length() > 0 && index != -1 && currHop < numHops)
+        // In result, search for all urls preceded by '<a href="http'.
+        int index = 0; // index of start of first instance of '<a href="http' in result
+        while(result.length() > 0 && index != -1 && currHop <= numHops) //<=, not < (EX: 5 hops means 6 links total)
         {
             index = result.indexOf("<a href=\"http");
             //System.out.println("index = " + index);
             if(index != -1)
             {
-                count++;
                 result = result.substring(index + 9); // new start index
 
                 int hrefEndIndex = result.indexOf("\"");//result.indexOf("\">"); //Look hERE
@@ -200,7 +201,8 @@ public class WebCrawl {
             }
             else // non-empty result allows more hops but cannot hop further due to lack of '<a href=http' found
             {
-                System.out.println("More hops allowed, but unable to hop further (index is -1) . Web crawl terminates.");
+                System.out.println("\nHop " + currHop + " < " + numHops + " hop limit: " +
+                        "\nMore hops allowed, but unable to hop further (index is -1) . Web crawl terminates.");
                 System.exit(0);
             }
         }
