@@ -87,12 +87,14 @@ public class WebCrawler {
         {
             //System.out.println("connection = " + connection.toString());
             connection.setRequestMethod("GET");
+            //connection.getInstanceFollowRedirects()
+            //connection.setInstanceFollowRedirects(true);
 
             int responseCode = connection.getResponseCode();
             //System.out.println("ResponseCode = " + responseCode);
             if(responseCode == 200)
             {
-                //System.out.println("\nConnection made. URL = " + url.toString());
+                System.out.println("\nConnection made. URL = " + url.toString());
                 addToVisited(url.toString());
                 InputStream is = connection.getInputStream(); //LOOK HERE
                 //System.out.println("is = " + is.toString());
@@ -101,7 +103,7 @@ public class WebCrawler {
             }
             else
             {
-                System.out.println("Connection error | responseCode " + responseCode + " | " + url.toString());
+                //System.out.println("Connection error | responseCode " + responseCode + " | " + url.toString());
 
                 //404: not found
 
@@ -139,9 +141,6 @@ public class WebCrawler {
         return false;
 
     }
-    ///to-do: check that this actually works
-    /// Note: does url count as visited as soon as you find it? Or do you need to connect with it first? OR connect + check all links first?
-    ///fix
 
     // Pre: urlFound is not already in visitedURLs
     public static void addToVisited(String urlFound)
@@ -176,6 +175,7 @@ public class WebCrawler {
         while(result.length() > 0 && index != -1 && currHop < numHops)
         {
             index = result.indexOf("<a href=\"http");
+            System.out.println("index = " + index);
             if(index != -1)
             {
                 count++;
@@ -192,6 +192,11 @@ public class WebCrawler {
                 {
                     connect(getURL(content));
                 }
+            }
+            else // FIX THIS... / FINISH THIS... (explain the approach after seeing -1)
+            {
+                System.out.println("EXIT because index is -1");
+                System.exit(0);
             }
         }
     }
