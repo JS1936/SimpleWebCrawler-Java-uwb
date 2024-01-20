@@ -137,7 +137,7 @@ public class WebCrawler {
         }
         for(String url: visitedURLs)
         {
-            System.out.println(url + " VS \n" + urlFound);
+            System.out.println(url);// + " VS " + urlFound);
             int difference = url.length() - urlFound.length();
             if(difference > 2) //EX: could need 's' and '/'
             {
@@ -146,12 +146,12 @@ public class WebCrawler {
 
             String urlFoundAddSlash = urlFound + "/";
             String urlFoundRemoveLast = urlFound.substring(0, urlFound.length() - 1);
-            String urlFoundAddS = urlFound.substring(0,4) + "s" + urlFound.substring(4, urlFound.length());
-            String urlFoundRemoveS = urlFound.substring(0,4) + urlFound.substring(5, urlFound.length());
-            System.out.println("urlFoundAddSlash   = " + urlFoundAddSlash);
-            System.out.println("urlFoundRemoveLast = " + urlFoundRemoveLast);
-            System.out.println("urlFoundAddS       = " + urlFoundAddS);
-            System.out.println("urlFoundRemoveS    = " + urlFoundRemoveS);
+            //String urlFoundAddS = urlFound.substring(0,4) + "s" + urlFound.substring(4, urlFound.length());
+            //String urlFoundRemoveS = urlFound.substring(0,4) + urlFound.substring(5, urlFound.length());
+            //System.out.println("urlFoundAddSlash   = " + urlFoundAddSlash);
+            //System.out.println("urlFoundRemoveLast = " + urlFoundRemoveLast);
+            //System.out.println("urlFoundAddS       = " + urlFoundAddS);
+            //System.out.println("urlFoundRemoveS    = " + urlFoundRemoveS);
             if(url.equals(urlFound))
             {
                 System.out.println("url == urlFound");
@@ -167,16 +167,16 @@ public class WebCrawler {
                 System.out.println("url == urlFoundRemoveLast");
                 return true;
             }
-            else if(url.equals(urlFoundAddS))
-            {
-                System.out.println("url == urlFoundAddS");
-                return true;
-            }
-            else if(url.equals(urlFoundRemoveS)) //Note: may not actually have https. Could become http//, removed :. Invalid link now.
-            {
-                System.out.println("url == urlFoundRemoveS");
-                return true;
-            }
+            //else if(url.equals(urlFoundAddS))
+            //{
+            //    System.out.println("url == urlFoundAddS");
+            //    return true;
+            //}
+            //else if(url.equals(urlFoundRemoveS)) //Note: may not actually have https. Could become http//, removed :. Invalid link now.
+            //{
+            //    System.out.println("url == urlFoundRemoveS");
+            //    return true;
+            //}
             else //not a match for this one
             {
 
@@ -228,7 +228,7 @@ public class WebCrawler {
         {
             result += (char)(is.read());
         }
-        System.out.println("result = \n" + result); //gives html
+        ///System.out.println("result = \n" + result); //gives html
 
         //Try writing it to file
         BufferedWriter bw = new BufferedWriter(new FileWriter("output.txt"));
@@ -256,7 +256,7 @@ public class WebCrawler {
                 {
                     connect(getURL(content));
                 }
-                printVisitedURLs();
+                //printVisitedURLs();
             }
             // <a href="http://faculty.washington.edu/dimpsey">
             //result = result.substring(index + 1); // new start index
