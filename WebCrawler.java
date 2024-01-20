@@ -13,6 +13,8 @@ import java.util.Vector;
 public class WebCrawler {
 
     static Vector<String> visitedURLs = new Vector<String>();    // to track urls that have been visited. Avoid repeat visits.
+    static int currHop = 0;
+    static int numHops = 0; //default
 
     // Command line input,
     //      expect: 2 args, args[0] = starting url, args[1] = integer >= 0 (num_hops)
@@ -25,6 +27,7 @@ public class WebCrawler {
             System.out.println("ARG = " + arg);
         }
     }
+
     public static void printVisitedURLs()
     {
         System.out.println("----Visited URLs:-----");
@@ -32,13 +35,9 @@ public class WebCrawler {
         {
             System.out.println(url);
         }
+        System.out.println("----------------------");
     }
-    /*public static void hop(String[] args)
-    {
-        System.out.println("args.length = " + args.length);
-        printArgs(args);
 
-    }*/
     public static void main2(String[] args) throws IOException {
         // 1. Check number of arguments
         if(args.length != 2)
@@ -51,6 +50,7 @@ public class WebCrawler {
         //2. Check url and num_hops
         URL url = getURL(args[0]);
         Integer num_hops = getNumHops(args[1]);
+        numHops = num_hops;
         Integer argc = args.length;
 
         // Only continue if input is valid.
@@ -73,6 +73,7 @@ public class WebCrawler {
         printArgs(args);
 
         main2(args);
+        printVisitedURLs();
 
 
 
@@ -93,11 +94,11 @@ public class WebCrawler {
         }
         else
         {
-            System.out.println("connection = " + connection.toString());
+            //System.out.println("connection = " + connection.toString());
             connection.setRequestMethod("GET");
 
             int responseCode = connection.getResponseCode();
-            System.out.println("ResponseCode = " + responseCode);
+            //System.out.println("ResponseCode = " + responseCode);
             if(responseCode == 200)
             {
                 System.out.println("Connection made. URL = " + url.toString());
@@ -105,6 +106,7 @@ public class WebCrawler {
             else
             {
                 System.out.println("Connection error: invalid response.");
+                return null;
             }
             InputStream is = connection.getInputStream();
             //System.out.println("hop 0 = " + url.toString());
@@ -137,7 +139,7 @@ public class WebCrawler {
         }
         for(String url: visitedURLs)
         {
-            System.out.println(url);// + " VS " + urlFound);
+            //System.out.println(url);// + " VS " + urlFound);
             int difference = url.length() - urlFound.length();
             if(difference > 2) //EX: could need 's' and '/'
             {
@@ -189,40 +191,21 @@ public class WebCrawler {
         return false;
 
     }
-    //to-do: check that this actually works
-    // Note: does url count as visited as soon as you find it? Or do you need to connect with it first? OR connect + check all links first?
-    //fix
-    public static boolean addToVisited(String urlFound)
-    {
-        int lengthFound = urlFound.length();
+    ///to-do: check that this actually works
+    /// Note: does url count as visited as soon as you find it? Or do you need to connect with it first? OR connect + check all links first?
+    ///fix
 
-        for(int i = 0; i < visitedURLs.size(); i++)
-        {
-            String urlCurr = visitedURLs.get(i);
-            int lengthCurrVisited = urlCurr.length();
-            if((lengthFound - lengthCurrVisited) == 1)
-            {
-                urlFound.substring(0, lengthFound - 1); //take of "/", if exists
-            }
-            else if((lengthFound - lengthCurrVisited) == -1)
-            {
-                urlFound += "/"; // add "/", just in case
-            }
-            if(urlFound == urlCurr) //visitedURLs.get(i)
-            {
-                System.out.println(urlFound + " already was visited. Do not add to visitedURLs");
-                return false;
-            }
-        }
+    // Pre: urlFound is not already in visitedURLs
+    public static void addToVisited(String urlFound)
+    {
         System.out.print("visitedURLs.size() = " + visitedURLs.size() + " -->");
         visitedURLs.add(urlFound);
         System.out.println(visitedURLs.size());
-        return true;
 
     }
     private static void parse(InputStream is) throws IOException {
-        System.out.println("is = " + is.toString());
-        System.out.println("is.available() = " + is.available());
+        //System.out.println("is = " + is.toString());
+        //System.out.println("is.available() = " + is.available());
         String result = "";
         while(is.available() > 0)
         {
@@ -231,28 +214,37 @@ public class WebCrawler {
         ///System.out.println("result = \n" + result); //gives html
 
         //Try writing it to file
-        BufferedWriter bw = new BufferedWriter(new FileWriter("output.txt"));
-        bw.write(result);
-        bw.close();
+        //BufferedWriter bw = new BufferedWriter(new FileWriter("output.txt"));
+        //bw.write(result);
+        //bw.close();
 
         //now parse it...
         int index = 0;
         int count = 0;
-        while(result.length() > 0 && index != -1)
+        while(result.length() > 0 && index != -1 && currHop < numHops)
         {
             index = result.indexOf("<a href=\"http");
-            System.out.print(count + ": index for '<a href=\"http' ==> " + index);
+            //System.out.print(count + ": index for '<a href=\"http' ==> " + index);
+            System.out.print("Hop " + count + ": " + index);
             if(index != -1)
             {
                 count++;
                 result = result.substring(index + 9); // new start index
 
                 int hrefEndIndex = result.indexOf("\"");//result.indexOf("\">"); //Look hERE
+                //if(index == -1)
+                //{
+                //    System.
+                //}
                 // length of 'a href="' = 8
 
-                String content = result.substring(0, hrefEndIndex);
+                String content = "";
+                if(hrefEndIndex > 0)
+                {
+                    content = result.substring(0, hrefEndIndex);
+                }
                 System.out.println( " | content: " + content);
-                if(!alreadyVisited(content))
+                if(content.length() > 0 && !alreadyVisited(content))
                 {
                     connect(getURL(content));
                 }
@@ -280,6 +272,7 @@ public class WebCrawler {
      */
 
     // If valid, expect: args[0] = url, args[1] = int >= 0
+    /*
     private static boolean isValidArgs(String[] args)
     {
         // 1. Check number of arguments
@@ -302,6 +295,7 @@ public class WebCrawler {
         }
         return true;
     }
+     */
     private static URL getURL(String str)
     {
         URL url;
@@ -309,9 +303,9 @@ public class WebCrawler {
             url = new URL(str);
         } catch (MalformedURLException e) {
             System.err.println("\turl:\t\tBAD. MalformedURLException. String could not become url");
-            return null; //could do System.exit(0) instead
+            return null; //not System.exit(0); 1 bad url doesn't stop program from going
         }
-        System.out.println("\turl:\t\tOK");
+        //System.out.println("\turl:\t\tOK (" + url.toString() + ")");
         return url;
     }
 
@@ -345,7 +339,7 @@ public class WebCrawler {
             System.err.println("Error: BAD url.");
             return false;
         }
-        if(num_hops == -1) {
+        if(num_hops == -1) { // < 0
             System.err.println("Error: BAD num_hops.");
             return false;
         }
