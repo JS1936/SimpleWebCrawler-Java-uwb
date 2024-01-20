@@ -16,6 +16,8 @@ import java.util.Vector;
  * Professor: Robert Dimpsey
  * By:        Jennifer Stibbins
  */
+
+//is the number off hops off by one (doing one extra)? (todo)
 public class WebCrawl {
 
     static Vector<String> visitedURLs = new Vector<String>(); // to avoid repeat visits, tracks already visited urls
@@ -77,7 +79,9 @@ public class WebCrawl {
 
     // Returns connection.
     // Special case example: 301 (redirect)
-    // For non-200 response messages (except 301), does not continue with proposed url. Example: 404.
+    // For non-200 response messages (except 301):
+    //      - Does not continue with proposed url
+    //      - Search continues within url preceding proposed url.
     private static HttpURLConnection connect(URL url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -88,7 +92,7 @@ public class WebCrawl {
         else //connection is not null
         {
             //System.out.println("connection = " + connection.toString());
-            connection.setRequestMethod("GET");
+            connection.setRequestMethod("GET"); // want GET request
 
             int responseCode = connection.getResponseCode();
             if(responseCode == 200)
@@ -98,7 +102,7 @@ public class WebCrawl {
 
                 addToVisited(url.toString());
                 InputStream is = connection.getInputStream(); // from url, get html data
-                parse(is); // parse data retrieved, looking for <a href> urls
+                parse(is); // parse data retrieved, looking for '<a href="http' urls
                 is.close();
             }
             else
@@ -114,7 +118,7 @@ public class WebCrawl {
                     URL newURL = getURL(newLocation);
                     connect(newURL);
                 }
-                return null;
+                return null; // did not connect
             }
         }
         return connection;
@@ -148,10 +152,6 @@ public class WebCrawl {
         currHop++;
     }
 
-    //check if specifying whole path or not (todo)
-    //what if there are no new links to be found? (todo)
-    //is the number off hops off by one (doing one extra)? (todo)
-    // Note: Does not check if specifying whole path or not. Expects whole path.
 
     // Reads from input stream and stores data in string result.
     // Parses by <a href>, looking for urls coming after.
@@ -169,8 +169,8 @@ public class WebCrawl {
         }
         //System.out.println("result = " + result); // gives html
 
-        // For debugging: write it to file
-        BufferedWriter bw = new BufferedWriter(new FileWriter("output" + currHop + ".txt"));
+        // For debugging: write it to file. Uses (currHop - 1) because currHop already incremented via addToVisited.
+        BufferedWriter bw = new BufferedWriter(new FileWriter("output" + (currHop - 1) + ".txt"));
         bw.write(result);
         bw.close();
 
