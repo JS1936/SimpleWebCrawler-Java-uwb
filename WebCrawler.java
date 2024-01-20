@@ -16,8 +16,6 @@ import java.util.Vector;
  * Professor: Robert Dimpsey
  * By:        Jennifer Stibbins
  */
-
-//is the number off hops off by one (doing one extra)? (todo)
 public class WebCrawl {
 
     static Vector<String> visitedURLs = new Vector<String>(); // to avoid repeat visits, tracks already visited urls
@@ -118,7 +116,7 @@ public class WebCrawl {
                     URL newURL = getURL(newLocation);
                     connect(newURL);
                 }
-                return null; // did not connect
+                //return null; // did not connect
             }
         }
         return connection;
@@ -164,7 +162,10 @@ public class WebCrawl {
         while(true)
         {
             int var = is.read();
-            if(var == -1) { break; }
+            if(var == -1) // reached end of stream
+            {
+                break;
+            }
             result += (char)(var);
         }
         //System.out.println("result = " + result); // gives html
