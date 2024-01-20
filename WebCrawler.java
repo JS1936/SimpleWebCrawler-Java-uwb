@@ -1,26 +1,29 @@
-import javax.swing.text.html.HTML;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
 
-// Link
-//  --> look inside data for LINK
-//          Link
-//              --> look inside data for LINK
+/*
+ * WebCrawl.java is a simple web crawler that uses HTTP and HTML.
+ * - Requires a starting url and a limit on number of url hops.
+ * - Follows a depth-first search pattern for urls.
+ * - Search concludes when: (1) limit on number of hops is met OR
+ *                          (2) a link has no new accessible options
+ *
+ * Project 1: Web Crawler
+ * CSS 436  : Cloud Computing
+ * Professor: Robert Dimpsey
+ * By:        Jennifer Stibbins
+ */
+public class WebCrawl {
 
-public class WebCrawler {
+    static Vector<String> visitedURLs = new Vector<String>(); // to track urls that have been visited. Avoid repeat visits.
+    static int currHop = 0; // always starts at 0, expected to increment over time
+    static int numHops = 0; // default, expected to change once
 
-    static Vector<String> visitedURLs = new Vector<String>();    // to track urls that have been visited. Avoid repeat visits.
-    static int currHop = 0; //start at 1 or 0?
-    static int numHops = 0; //default
-    //add static int currURL = 0?
 
-    // Command line input,
-    //      expect: 2 args, args[0] = starting url, args[1] = integer >= 0 (num_hops)
-
-    //Abstract out, so main calls "hop" or something similar
+    // Optional: Can be helpful for debugging. Prints arguments given via command line.
     public static void printArgs(String[] args)
     {
         for(String arg: args)
@@ -67,6 +70,7 @@ public class WebCrawler {
     // 2. Connect
     // 3. If connect, then get next link
     //          1. Validate args...
+    // Command line input, expect: 2 args, args[0] = starting url, args[1] = integer >= 0 (num_hops)
     public static void main(String[] args) throws IOException {
         System.out.println("Welcome to WebCrawler.java");
         System.out.println("--------------------------");
@@ -87,11 +91,8 @@ public class WebCrawler {
         {
             //System.out.println("connection = " + connection.toString());
             connection.setRequestMethod("GET");
-            //connection.getInstanceFollowRedirects()
-            //connection.setInstanceFollowRedirects(true);
 
             int responseCode = connection.getResponseCode();
-            //System.out.println("ResponseCode = " + responseCode);
             if(responseCode == 200)
             {
                 System.out.println("\nConnection made. URL = " + url.toString());
@@ -103,7 +104,7 @@ public class WebCrawler {
             }
             else
             {
-                //System.out.println("Connection error | responseCode " + responseCode + " | " + url.toString());
+                System.out.println("Connection error | responseCode " + responseCode + " | " + url.toString());
 
                 //404: not found
 
@@ -134,15 +135,15 @@ public class WebCrawler {
             String urlFoundRemoveLast = urlFound.substring(0, urlFound.length() - 1);
             if(url.equals(urlFound) || url.equals(urlFoundAddSlash) || url.equals(urlFoundRemoveLast))
             {
-                return true; // match: is already visited
+                return true; // urlFound is already visited
             }
         }
-        // Not already visited
-        return false;
+        return false; // urlFound is not already visited
 
     }
 
     // Pre: urlFound is not already in visitedURLs
+    // Note: When adding a new url to visitedURLs, currHop increments by one.
     public static void addToVisited(String urlFound)
     {
         System.out.println("(" + currHop + ") " + urlFound);
@@ -153,6 +154,7 @@ public class WebCrawler {
     //check if specifying whole path or not (todo)
     //what if there are no new links to be found? (todo)
     //is the number off hops off by one (doing one extra)? (todo)
+    // Note: Does not check if specifying whole path or not. Expects whole path.
     private static void parse(InputStream is) throws IOException {
 
         String result = "";
@@ -252,3 +254,5 @@ public class WebCrawler {
     }
 
 }
+
+//Abstract out, so main calls "hop" or something similar
