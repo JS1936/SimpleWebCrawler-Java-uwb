@@ -24,16 +24,15 @@ public class WebCrawl {
 
 
     // Optional: Can be helpful for debugging. Prints arguments given via command line.
-    public static void printArgs(String[] args)
-    {
+    public static void printArgs(String[] args) {
         for(String arg: args)
         {
             System.out.println("ARG = " + arg);
         }
     }
 
-    public static void printVisitedURLs()
-    {
+    // Optional: Can be helpful for debugging. Prints all visited URLs so far. Does not mention responseCode info.
+    public static void printVisitedURLs() {
         System.out.println("----Visited URLs:-----");
         for(String url : visitedURLs)
         {
@@ -42,8 +41,8 @@ public class WebCrawl {
         System.out.println("----------------------");
     }
 
-    // "preFirstHop"
-    public static void main2(String[] args) throws IOException {
+    // Starts the web crawler by validating arguments and connecting to given url (hop 0).
+    public static void start(String[] args) throws IOException {
         // 1. Check number of arguments
         if(args.length != 2)
         {
@@ -52,34 +51,31 @@ public class WebCrawl {
         }
         System.out.println("\t# arguments:\tOK");
 
-        //2. Check url and num_hops
+        // 2. Check url and num_hops
         URL url = getURL(args[0]);
-        Integer num_hops = getNumHops(args[1]);
-        numHops = num_hops;
-        Integer argc = args.length;
+        numHops = getNumHops(args[1]);
 
-        // Only continue if input is valid.
-        if(!isValidInput(url, num_hops))
+        // 3. Only continue if input is valid. If invalid, do not connect.
+        if(!isValidInput(url, numHops))
         {
             return;
         }
         //System.out.println("Attempting to connect to : " + url.toString());
         connect(url);
     }
-    // 1. Validate args
-    // 2. Connect
-    // 3. If connect, then get next link
-    //          1. Validate args...
+
+
     // Command line input, expect: 2 args, args[0] = starting url, args[1] = integer >= 0 (num_hops)
+    // Starts web crawler. If web crawler reaches limit num_hops, then prints all urls visited in chronological order.
     public static void main(String[] args) throws IOException {
         System.out.println("Welcome to WebCrawler.java");
         System.out.println("--------------------------");
-        System.out.println("args.length = " + args.length);
-        printArgs(args);
-        main2(args);
+        start(args);
         printVisitedURLs();
     }
 
+    // Returns connection.
+    // Special case example: 301 (redirect)
     private static HttpURLConnection connect(URL url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -123,8 +119,7 @@ public class WebCrawl {
 
     // Returns true if urlFound has been already visited. Otherwise, returns false.
     // Note: <url> and <url>/ are considered to be the same.
-    public static boolean alreadyVisited(String urlFound)
-    {
+    public static boolean alreadyVisited(String urlFound) {
         if(visitedURLs.size() == 0) // urlFound is automatically unvisited
         {
             return false;
@@ -144,8 +139,7 @@ public class WebCrawl {
 
     // Pre: urlFound is not already in visitedURLs
     // Note: When adding a new url to visitedURLs, currHop increments by one.
-    public static void addToVisited(String urlFound)
-    {
+    public static void addToVisited(String urlFound) {
         System.out.println("(" + currHop + ") " + urlFound);
         visitedURLs.add(urlFound);
         currHop++;
@@ -203,8 +197,9 @@ public class WebCrawl {
         }
     }
 
-    private static URL getURL(String str)
-    {
+    // Given string "str", tries to convert it into URL format.
+    // Returns the url (returns null if URL is malformed)
+    private static URL getURL(String str) {
         URL url;
         try {
             url = new URL(str);
@@ -216,9 +211,11 @@ public class WebCrawl {
         return url;
     }
 
-    private static Integer getNumHops(String str)
-    {
-        Integer num_hops;
+    // Given string "str", tries to convert it to int value num_hops.
+    // If invalid conversion, num_hops defaults to -1.
+    // Returns num_hops
+    private static int getNumHops(String str) {
+        int num_hops;
         try {
             num_hops = Integer.valueOf(str);
         } catch (NumberFormatException e)
@@ -237,10 +234,8 @@ public class WebCrawl {
     }
 
     // Pre: # args = 2
-    // Returns true if url is URL AND num_hops is integer >= 0.
-    // Otherwise, returns false.
-    private static boolean isValidInput(URL url, Integer num_hops)
-    {
+    // Returns true if url is URL AND num_hops is integer >= 0. Otherwise, returns false.
+    private static boolean isValidInput(URL url, int num_hops) {
         // Check argument types: validate URL and int
         if(url == null) {
             System.err.println("Error: BAD url.");
@@ -254,5 +249,3 @@ public class WebCrawl {
     }
 
 }
-
-//Abstract out, so main calls "hop" or something similar
