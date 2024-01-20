@@ -18,7 +18,7 @@ import java.util.Vector;
  */
 public class WebCrawl {
 
-    static Vector<String> visitedURLs = new Vector<String>(); // to track urls that have been visited. Avoid repeat visits.
+    static Vector<String> visitedURLs = new Vector<String>(); // to avoid repeat visits, tracks already visited urls
     static int currHop = 0; // always starts at 0, expected to increment over time
     static int numHops = 0; // default, expected to change once
 
@@ -58,20 +58,20 @@ public class WebCrawl {
         // 3. Only continue if input is valid. If invalid, do not connect.
         if(!isValidInput(url, numHops))
         {
-            return;
+            return; // Note: isValidInput call provides error message(s)
         }
         //System.out.println("Attempting to connect to : " + url.toString());
-        connect(url);
+        connect(url);  // Connect to url corresponding to hop 0.
     }
 
 
     // Command line input, expect: 2 args, args[0] = starting url, args[1] = integer >= 0 (num_hops)
     // Starts web crawler. If web crawler reaches limit num_hops, then prints all urls visited in chronological order.
     public static void main(String[] args) throws IOException {
-        System.out.println("Welcome to WebCrawler.java");
+        System.out.println("Welcome to WebCrawl.java");
         System.out.println("--------------------------");
-        start(args);
-        printVisitedURLs();
+        start(args);        // start web crawl from given url (hop 0)
+        printVisitedURLs(); // only prints if currHop reaches numHops
     }
 
     // Returns connection.
@@ -91,12 +91,13 @@ public class WebCrawl {
             int responseCode = connection.getResponseCode();
             if(responseCode == 200)
             {
-                System.out.println("\nConnection made. URL = " + url.toString());
+                // Helpful for debugging
+                //System.out.println("\nConnection made. URL = " + url.toString());
+
                 addToVisited(url.toString());
-                InputStream is = connection.getInputStream(); //LOOK HERE
-                //System.out.println("is = " + is.toString());
-                parse(is);
-                //is.close();
+                InputStream is = connection.getInputStream(); // from url, get html data
+                parse(is); // parse data retrieved, looking for <a href> urls
+                is.close();
             }
             else
             {
@@ -149,6 +150,11 @@ public class WebCrawl {
     //what if there are no new links to be found? (todo)
     //is the number off hops off by one (doing one extra)? (todo)
     // Note: Does not check if specifying whole path or not. Expects whole path.
+
+    // Reads from input stream and stores data in string result.
+    // Parses by <a href>, looking for urls coming after.
+    //
+    // Optional: write to file to store results to review when debugging.
     private static void parse(InputStream is) throws IOException {
 
         String result = "";
@@ -160,18 +166,18 @@ public class WebCrawl {
         }
         //System.out.println("result = " + result); // gives html
 
-        //Try writing it to file
+        // For debugging: write it to file
         BufferedWriter bw = new BufferedWriter(new FileWriter("output" + currHop + ".txt"));
         bw.write(result);
         bw.close();
 
-        //now parse it...
+        // In result, search for all urls preceded by '<a href=http'.
         int index = 0;
         int count = 0;
         while(result.length() > 0 && index != -1 && currHop < numHops)
         {
             index = result.indexOf("<a href=\"http");
-            System.out.println("index = " + index);
+            //System.out.println("index = " + index);
             if(index != -1)
             {
                 count++;
@@ -181,17 +187,20 @@ public class WebCrawl {
                 String content = "";
                 if(hrefEndIndex > 0)
                 {
-                    content = result.substring(0, hrefEndIndex);
+                    content = result.substring(0, hrefEndIndex); // get url
                 }
-                System.out.println( " | content: " + content);
+
+                // Helpful for debugging:
+                //System.out.println( " | content: " + content); // print url encountered via '<a href=http' search
+
                 if(content.length() > 0 && !alreadyVisited(content))
                 {
-                    connect(getURL(content));
+                    connect(getURL(content)); // connect to non-empty, unvisited url
                 }
             }
-            else // FIX THIS... / FINISH THIS... (explain the approach after seeing -1)
+            else // non-empty result allows more hops but cannot hop further due to lack of '<a href=http' found
             {
-                System.out.println("EXIT because index is -1");
+                System.out.println("More hops allowed, but unable to hop further (index is -1) . Web crawl terminates.");
                 System.exit(0);
             }
         }
@@ -233,7 +242,7 @@ public class WebCrawl {
 
     }
 
-    // Pre: # args = 2
+    // Pre: # args = 2; url and num_hops have been set by getURL(url) and getNumHops(str).
     // Returns true if url is URL AND num_hops is integer >= 0. Otherwise, returns false.
     private static boolean isValidInput(URL url, int num_hops) {
         // Check argument types: validate URL and int
@@ -241,7 +250,7 @@ public class WebCrawl {
             System.err.println("Error: BAD url.");
             return false;
         }
-        if(num_hops == -1) { // < 0
+        if(num_hops == -1) {
             System.err.println("Error: BAD num_hops.");
             return false;
         }
