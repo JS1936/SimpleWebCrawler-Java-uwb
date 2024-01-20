@@ -101,11 +101,15 @@ public class WebCrawler {
             //System.out.println("ResponseCode = " + responseCode);
             if(responseCode == 200)
             {
-                System.out.println("Connection made. URL = " + url.toString());
+                ///System.out.println("Connection made. URL = " + url.toString() + "\n");
             }
             else
             {
-                System.out.println("Connection error: invalid response.");
+                System.out.println("Connection error: invalid response (responseCode = " + responseCode + ")\n");
+
+                //404: not found
+
+                //301: redirect
                 return null;
             }
             InputStream is = connection.getInputStream();
@@ -129,11 +133,11 @@ public class WebCrawler {
 //why is printVisitedURLs getting called twice as often?
     public static boolean alreadyVisited(String urlFound)
     {
-        System.out.println("-----Checking if url is already visited: " + urlFound);
+        ///System.out.println("-----Checking if url is already visited: " + urlFound);
         //printVisitedURLs();
         if(visitedURLs.size() == 0)
         {
-            System.out.println("New url found! --> " + urlFound);
+            System.out.println("(" + currHop + ") New url found! --> " + urlFound);
             addToVisited(urlFound);
             return false;
         }
@@ -141,10 +145,10 @@ public class WebCrawler {
         {
             //System.out.println(url);// + " VS " + urlFound);
             int difference = url.length() - urlFound.length();
-            if(difference > 2) //EX: could need 's' and '/'
-            {
-                return false;
-            }
+            //if(difference > 2) //EX: could need 's' and '/'
+            //{
+            //    return false;
+            //}
 
             String urlFoundAddSlash = urlFound + "/";
             String urlFoundRemoveLast = urlFound.substring(0, urlFound.length() - 1);
@@ -156,17 +160,17 @@ public class WebCrawler {
             //System.out.println("urlFoundRemoveS    = " + urlFoundRemoveS);
             if(url.equals(urlFound))
             {
-                System.out.println("url == urlFound");
+                ///System.out.println("url == urlFound");
                 return true;
             }
             else if(url.equals(urlFoundAddSlash))
             {
-                System.out.println("url == urlFoundAddSlash");
+                ///System.out.println("url == urlFoundAddSlash");
                 return true;
             }
             else if(url.equals(urlFoundRemoveLast))
             {
-                System.out.println("url == urlFoundRemoveLast");
+                ///System.out.println("url == urlFoundRemoveLast");
                 return true;
             }
             //else if(url.equals(urlFoundAddS))
@@ -185,7 +189,7 @@ public class WebCrawler {
             }
         }
         // Not already visited
-        System.out.println("New url found! --> " + urlFound);
+        System.out.println("(" + currHop + ") New url found! --> " + urlFound);
         addToVisited(urlFound);
         //printVisitedURLs();
         return false;
@@ -198,9 +202,10 @@ public class WebCrawler {
     // Pre: urlFound is not already in visitedURLs
     public static void addToVisited(String urlFound)
     {
-        System.out.print("visitedURLs.size() = " + visitedURLs.size() + " -->");
+        //System.out.print("visitedURLs.size() = " + visitedURLs.size() + " -->");
         visitedURLs.add(urlFound);
-        System.out.println(visitedURLs.size());
+        currHop++;
+        //System.out.println(visitedURLs.size());
 
     }
     private static void parse(InputStream is) throws IOException {
@@ -225,7 +230,7 @@ public class WebCrawler {
         {
             index = result.indexOf("<a href=\"http");
             //System.out.print(count + ": index for '<a href=\"http' ==> " + index);
-            System.out.print("Hop " + count + ": " + index);
+            ///System.out.print("Hop " + count + ": " + index);
             if(index != -1)
             {
                 count++;
@@ -243,7 +248,7 @@ public class WebCrawler {
                 {
                     content = result.substring(0, hrefEndIndex);
                 }
-                System.out.println( " | content: " + content);
+                ///System.out.println( " | content: " + content);
                 if(content.length() > 0 && !alreadyVisited(content))
                 {
                     connect(getURL(content));
