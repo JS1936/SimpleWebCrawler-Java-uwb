@@ -1,7 +1,5 @@
 import javax.swing.text.html.HTML;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringBufferInputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -193,6 +191,7 @@ public class WebCrawler {
     }
     //to-do: check that this actually works
     // Note: does url count as visited as soon as you find it? Or do you need to connect with it first? OR connect + check all links first?
+    //fix
     public static boolean addToVisited(String urlFound)
     {
         int lengthFound = urlFound.length();
@@ -229,7 +228,12 @@ public class WebCrawler {
         {
             result += (char)(is.read());
         }
-        //System.out.println("result = \n" + result); //gives html
+        System.out.println("result = \n" + result); //gives html
+
+        //Try writing it to file
+        BufferedWriter bw = new BufferedWriter(new FileWriter("output.txt"));
+        bw.write(result);
+        bw.close();
 
         //now parse it...
         int index = 0;
@@ -241,12 +245,12 @@ public class WebCrawler {
             if(index != -1)
             {
                 count++;
-                result = result.substring(index + 1); // new start index
+                result = result.substring(index + 9); // new start index
 
-                int hrefEndIndex = result.indexOf("\">");
+                int hrefEndIndex = result.indexOf("\"");//result.indexOf("\">"); //Look hERE
                 // length of 'a href="' = 8
 
-                String content = result.substring(8, hrefEndIndex);
+                String content = result.substring(0, hrefEndIndex);
                 System.out.println( " | content: " + content);
                 if(!alreadyVisited(content))
                 {
@@ -274,12 +278,6 @@ public class WebCrawler {
         }
     }
      */
-    public static HTML getHTML()
-    {
-
-
-        return null;
-    }
 
     // If valid, expect: args[0] = url, args[1] = int >= 0
     private static boolean isValidArgs(String[] args)
