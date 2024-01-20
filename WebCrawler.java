@@ -39,6 +39,7 @@ public class WebCrawler {
         System.out.println("----------------------");
     }
 
+    // "preFirstHop"
     public static void main2(String[] args) throws IOException {
         // 1. Check number of arguments
         if(args.length != 2)
@@ -69,22 +70,11 @@ public class WebCrawler {
     public static void main(String[] args) throws IOException {
         System.out.println("Welcome to WebCrawler.java");
         System.out.println("--------------------------");
-        //hop(args);
         System.out.println("args.length = " + args.length);
         printArgs(args);
-
         main2(args);
         printVisitedURLs();
-
-
-
-
     }
-    //Given a URL, checks the current response code for the HttpURLConnection connection.
-    //Expect: response code is 200 (valid/OK). Otherwise, invalid connection.
-    //private void printResponseCodeSuccessFail(URL url) throws IOException {
-
-    //private void endProgramIfNullConnection() throws IOException {
 
     private static HttpURLConnection connect(URL url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -93,18 +83,24 @@ public class WebCrawler {
         {
             System.err.println("Error: connection is null");
         }
-        else
+        else //connection is not null
         {
-            //System.out.println("connection = " + connection.toString());
+            System.out.println("connection = " + connection.toString());
             connection.setRequestMethod("GET");
             //connection.setInstanceFollowRedirects(true); //try this
 
             int responseCode = connection.getResponseCode();
-            System.out.println("ResponseCode = " + responseCode);
+            //System.out.println("ResponseCode = " + responseCode);
             if(responseCode == 200)
             {
                 System.out.println("\nConnection made. URL = " + url.toString());
                 addToVisited(url.toString());
+                InputStream is = connection.getInputStream(); //LOOK HERE
+                System.out.println("is = " + is.toString());
+                //connection.getInstanceFollowRedirects()
+                //System.out.println("hop 0 = " + url.toString());
+                parse(is);
+                //is.close();
             }
             else
             {
@@ -123,11 +119,12 @@ public class WebCrawler {
                     return null;
                 //}
             }
-            InputStream is = connection.getInputStream(); //LOOK HERE
-            //connection.getInstanceFollowRedirects()
-
-            //System.out.println("hop 0 = " + url.toString());
-            parse(is);
+//            InputStream is = connection.getInputStream(); //LOOK HERE
+//            System.out.println("is = " + is.toString());
+//            //connection.getInstanceFollowRedirects()
+//            //System.out.println("hop 0 = " + url.toString());
+//            parse(is);
+//            //is.close();
         }
         return connection;
     }
@@ -158,39 +155,14 @@ public class WebCrawler {
         }
         for(String url: visitedURLs)
         {
-            //System.out.println(url);// + " VS " + urlFound);
-            int difference = url.length() - urlFound.length();
-            //if(difference > 2) //EX: could need 's' and '/'
-            //{
-            //    return false;
-            //}
-
             String urlFoundAddSlash = urlFound + "/";
             String urlFoundRemoveLast = urlFound.substring(0, urlFound.length() - 1);
-            if(url.equals(urlFound))
+            if(url.equals(urlFound) || url.equals(urlFoundAddSlash) || url.equals(urlFoundRemoveLast))
             {
-                ///System.out.println("url == urlFound");
-                return true;
-            }
-            else if(url.equals(urlFoundAddSlash))
-            {
-                ///System.out.println("url == urlFoundAddSlash");
-                return true;
-            }
-            else if(url.equals(urlFoundRemoveLast))
-            {
-                ///System.out.println("url == urlFoundRemoveLast");
-                return true;
-            }
-            else //not a match for this one
-            {
-
+                return true; // match: is already visited
             }
         }
         // Not already visited
-        //System.out.println("(" + currHop + ") New url found! --> " + urlFound);
-        //addToVisited(urlFound);
-        //printVisitedURLs();
         return false;
 
     }
@@ -201,21 +173,32 @@ public class WebCrawler {
     // Pre: urlFound is not already in visitedURLs
     public static void addToVisited(String urlFound)
     {
-        //System.out.print("visitedURLs.size() = " + visitedURLs.size() + " -->");
         System.out.println("(" + currHop + ") " + urlFound);
         visitedURLs.add(urlFound);
         currHop++;
-        //System.out.println(visitedURLs.size());
 
     }
+
+    //check if specifying whole path or not (todo)
     private static void parse(InputStream is) throws IOException {
         //System.out.println("is = " + is.toString());
         System.out.println("is.available() = " + is.available());
         String result = "";
-        while(is.available() > 0)
+        //while(is.available() > 0)
+        //{
+        //    result += (char)(is.read());
+        //}
+        while(true)
         {
-            result += (char)(is.read());
+            int var = is.read();
+            //System.out.println("var = " + var);
+            if(var == -1)
+            {
+                break;
+            }
+            result += (char)(var);
         }
+        //System.out.println("result = " + result);
         ///System.out.println("result = \n" + result); //gives html
 
         //Try writing it to file
