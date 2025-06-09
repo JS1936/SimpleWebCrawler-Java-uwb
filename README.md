@@ -1,4 +1,4 @@
-# Web Crawler in Java #
+# Simple Web Crawler in Java #
 
 This project was a school assignment. It introduced me to web crawlers.
 
